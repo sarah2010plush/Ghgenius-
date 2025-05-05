@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GHGenius - Carbon Footprint Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #eafaf1; color: #2e7d32; }
+    .page { display: none; padding: 30px; text-align: center; }
+    .active { display: block; }
+    h1 { font-size: 36px; margin-bottom: 10px; }
+    .btn {
+      background-color: #2e7d32; color: white; padding: 14px 30px; margin: 20px;
+      border: none; border-radius: 25px; font-size: 18px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .btn:hover { background-color: #1b5e20; transform: scale(1.05); }
+    input, select {
+      padding: 12px; font-size: 16px; margin: 10px; width: 250px;
+      border: 1px solid #ccc; border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    #errorMsg { color: red; display: none; font-weight: bold; }
+    #feedbackLink {
+      display: none; text-decoration: underline;
+      cursor: pointer; font-size: 18px; color: #1b5e20;
+    }
+    .eco-img {
+      max-width: 280px; margin: 20px auto; border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    ul {
+      text-align: left; max-width: 600px; margin: auto;
+      line-height: 1.6;
+    }
+    .card {
+      background: white; padding: 30px; border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Intro Page -->
+<div id="introPage" class="page active">
+  <div class="card">
+    <h1>GHGenius</h1>
+    <p>Welcome to your personal Carbon Footprint Calculator 🌍</p>
+    <img src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=60" class="eco-img" alt="Nature">
+    <br>
+    <button class="btn" onclick="goToCalculator()">Get Started</button>
+  </div>
+</div>
+
+<!-- Calculator Page -->
+<div id="calculatorPage" class="page">
+  <div class="card">
+    <h1>GHGenius</h1>
+    <p>Enter your details below:</p>
+    <input type="number" id="electricity" placeholder="Electricity (kWh)"><br>
+    <input type="number" id="fuel" placeholder="Fuel (liters)"><br>
+    <select id="diet">
+      <option value="">Select Diet Type</option>
+      <option value="vegan">Vegan</option>
+      <option value="vegetarian">Vegetarian</option>
+      <option value="omnivore">Omnivore</option>
+    </select><br>
+    <input type="number" id="waste" placeholder="Waste (kg)"><br>
+    <button class="btn" onclick="validateAndCalculate()">Calculate Carbon Footprint</button>
+    <div id="errorMsg">Please fill in all fields correctly.</div>
+    <div id="result"></div>
+    <div id="feedbackLink" onclick="showFeedback()">Click here for feedback</div>
+  </div>
+</div>
+
+<!-- Feedback Page -->
+<div id="feedbackPage" class="page">
+  <div class="card">
+    <h1>GHGenius</h1>
+    <h3>Your Environmental Impact Summary</h3>
+    <img src="https://cdn-icons-png.flaticon.com/512/3039/3039437.png" class="eco-img" style="max-width: 150px;" alt="Leaf">
+    <div id="feedbackContent"></div>
+    <button class="btn" onclick="goBack()">← Back to Calculator</button>
+  </div>
+</div>
+
+<script>
+  let carbonTotal = 0;
+
+  function goToCalculator() {
+    switchPage('introPage', 'calculatorPage');
+  }
+
+  function validateAndCalculate() {
+    const electricity = document.getElementById("electricity").value;
+    const fuel = document.getElementById("fuel").value;
+    const diet = document.getElementById("diet").value;
+    const waste = document.getElementById("waste").value;
+
+    if (!electricity || !fuel || !diet || !waste) {
+      const error = document.getElementById("errorMsg");
+      error.style.display = "block";
+      setTimeout(() => error.style.display = "none", 3000);
+      return;
+    }
+
+    calculateCarbon();
+  }
+
+  function calculateCarbon() {
+    const electricity = parseFloat(document.getElementById("electricity").value);
+    const fuel = parseFloat(document.getElementById("fuel").value);
+    const diet = document.getElementById("diet").value;
+    const waste = parseFloat(document.getElementById("waste").value);
+
+    const factors = {
+      electricity: 0.417,
+      fuel: 2.5,
+      waste: 1.5,
+      diet: {
+        vegan: 1.5,
+        vegetarian: 1.7,
+        omnivore: 2.5
+      }
+    };
+
+    carbonTotal = (electricity * factors.electricity) +
+                  (fuel * factors.fuel) +
+                  (waste * factors.waste) +
+                  (factors.diet[diet] * 30);
+
+    const rounded = carbonTotal.toFixed(2);
+    let level = "";
+    if (carbonTotal < 27) {
+      level = "which is lower than average.";
+    } else if (carbonTotal <= 41) {
+      level = "which is around average.";
+    } else {
+      level = "which is higher than average.";
+    }
+
+    document.getElementById("result").innerText =
+      `Your total carbon footprint is approximately ${rounded} kg CO₂ emissions, ${level}`;
+    document.getElementById("feedbackLink").style.display = "block";
+  }
+
+  function showFeedback() {
+    switchPage('calculatorPage', 'feedbackPage');
+
+    const emission = carbonTotal.toFixed(2);
+    let severity = "", color = "";
+
+    if (carbonTotal < 27) {
+      severity = "low"; color = "green";
+    } else if (carbonTotal <= 41) {
+      severity = "moderate"; color = "orange";
+    } else {
+      severity = "extremely high"; color = "red";
+    }
+
+    document.getElementById("feedbackContent").innerHTML = `
+      <ul>
+        <li><strong>Your carbon footprint:</strong> <span style="color:red">${emission}</span> kg CO₂ per day</li>
+        <li><strong>Severity:</strong> <span style="color:${color}; font-weight:bold">${severity}</span></li>
+        <li>Most people emit ~27–41 kg CO₂ daily.</li>
+        <li>This level indicates a resource-heavy lifestyle. Consider:
+          <ul>
+            <li>Switching to renewable energy</li>
+            <li>Reducing fuel consumption</li>
+            <li>Minimizing waste generation</li>
+            <li>Eating more plant-based foods</li>
+            <li>Using eco-friendly transport</li>
+          </ul>
+        </li>
+      </ul>
+    `;
+  }
+
+  function goBack() {
+    switchPage('feedbackPage', 'calculatorPage');
+  }
+
+  function switchPage(hideId, showId) {
+    document.getElementById(hideId).classList.remove("active");
+    document.getElementById(showId).classList.add("active");
+  }
+</script>
+</body>
+</html>
